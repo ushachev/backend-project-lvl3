@@ -1,0 +1,23 @@
+{
+  "name": "page-loader",
+  "version": "0.0.1",
+  "description": "cli utility for downloading Web pages",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ushachev/backend-project-lvl3.git"
+  },
+  "keywords": [
+    "node.js",
+    "cli-utility",
+    "page-downloader"
+  ],
+  "author": "Vitaliy Ushachev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ushachev/backend-project-lvl3/issues"
+  },
+  "homepage": "https://github.com/ushachev/backend-project-lvl3#readme"
+}
