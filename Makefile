@@ -8,6 +8,4 @@ test:
 	npm test
 test-coverage:
 	npm test -- --coverage
-build:
-	npm run build
-.PHONY: install test build
+.PHONY: install test

@@ -1,0 +1,10 @@
+env:
+  node: true
+  jest/globals: true
+plugins:
+  - jest
+extends:
+  - airbnb-base
+  - plugin:jest/recommended
+rules:
+  no-console: 0
