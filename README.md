@@ -8,6 +8,10 @@ Educational "Project #3" is being developed as part of "Backend Javascript (node
 # Web page downloader
 Downloads a web page for local viewing.
 
+[![Node.js CI](https://github.com/ushachev/backend-project-lvl3/workflows/Node.js%20CI/badge.svg)](https://github.com/ushachev/backend-project-lvl3/actions)
+[![Maintainability](https://api.codeclimate.com/v1/badges/77018128d70e87e2ee24/maintainability)](https://codeclimate.com/github/ushachev/backend-project-lvl3/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/77018128d70e87e2ee24/test_coverage)](https://codeclimate.com/github/ushachev/backend-project-lvl3/test_coverage)
+
 ## Setup
 
 ```sh
