@@ -10,7 +10,7 @@ const loadPage = (url, output = '') => {
     .then(() => axios.get(url))
     .then(({ data }) => fs.writeFile(path.join(absOutput, pageName), data))
     .then(() => `Page was downloaded as '${pageName}'`)
-    .catch((e) => e.message);
+    .catch((e) => `Error: ${e.message}`);
 };
 
 export default loadPage;

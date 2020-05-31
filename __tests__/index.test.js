@@ -38,8 +38,8 @@ test('load and write page', async () => {
 
 test('load with error', async () => {
   const msg = await loadPage('invalid/url');
-  expect(msg).toBe('Request failed with status code 400');
+  expect(msg).toMatch(/Error:/);
 
   const msg2 = await loadPage(`${host}${pathName}`, `${output}/not/exist`);
-  expect(msg2).toMatch(/ENOENT/);
+  expect(msg2).toMatch(/Error:/);
 });
