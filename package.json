@@ -8,6 +8,9 @@
   "scripts": {
     "test": "npx -n --experimental-vm-modules jest"
   },
+  "bin": {
+    "page-loader": "bin/pageLoader.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ushachev/backend-project-lvl3.git"
@@ -36,6 +39,7 @@
     "nock": "^12.0.3"
   },
   "dependencies": {
-    "axios": "^0.19.2"
+    "axios": "^0.19.2",
+    "commander": "^5.1.0"
   }
 }

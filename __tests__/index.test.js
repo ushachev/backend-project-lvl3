@@ -22,13 +22,24 @@ beforeEach(async () => {
   output = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
 });
 
+afterEach(() => { nock.restore(); });
+
 test('load and write page', async () => {
   nock(host).get(pathName).reply(200, pageContent);
 
-  await loadPage(`${host}${pathName}`, output);
+  const msg = await loadPage(`${host}${pathName}`, output);
 
   const filepath = path.join(output, pageName);
   const loadedContent = await fs.readFile(filepath, 'utf-8');
 
+  expect(msg).toBe(`Page was downloaded as '${pageName}'`);
   expect(loadedContent).toBe(pageContent);
+});
+
+test('load with error', async () => {
+  const msg = await loadPage('invalid/url');
+  expect(msg).toBe('Request failed with status code 400');
+
+  const msg2 = await loadPage(`${host}${pathName}`, `${output}/not/exist`);
+  expect(msg2).toMatch(/ENOENT/);
 });

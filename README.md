@@ -27,6 +27,8 @@ $ sudo npm link
 this will create a symlink to the package after that it will become possible to launch application by typing
 
 ```sh
-$ page-loader
+$ page-loader -h
 ```
 like this
+
+[![asciicast](https://asciinema.org/a/rL4O5yJRYJajT1OGutoTQKIx0.svg)](https://asciinema.org/a/rL4O5yJRYJajT1OGutoTQKIx0)

@@ -2,14 +2,15 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import axios from 'axios';
 
-const loadPage = (url, output) => {
-  const pageName = 'hexlet-io-courses.html';
-  const filepath = path.join(output, pageName);
-  const fullPath = path.resolve(process.cwd(), filepath);
+const loadPage = (url, output = '') => {
+  const absOutput = path.resolve(process.cwd(), output);
+  const pageName = `${url.replace(/.*\/\//, '').replace(/\W/g, '-')}.html`;
 
-  return axios.get(url)
-    .then(({ data }) => fs.writeFile(fullPath, data))
-    .catch((error) => console.log('error', error));
+  return fs.access(absOutput)
+    .then(() => axios.get(url))
+    .then(({ data }) => fs.writeFile(path.join(absOutput, pageName), data))
+    .then(() => `Page was downloaded as '${pageName}'`)
+    .catch((e) => e.message);
 };
 
 export default loadPage;
