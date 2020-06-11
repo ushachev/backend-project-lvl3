@@ -1,45 +1,71 @@
-import path from 'path';
+import { join } from 'path';
 import os from 'os';
-import { promises as fs } from 'fs';
+import { createReadStream, promises as fs } from 'fs';
 import nock from 'nock';
+import cheerio from 'cheerio';
 import loadPage from '../index.js';
 
-const getFixturePath = (filename) => path.join('__fixtures__', filename);
+const getFixturePath = (filename) => join('__fixtures__', filename);
 
 const host = 'https://hexlet.io';
 const pathName = '/courses';
 const pageName = 'hexlet-io-courses.html';
+const assetsDir = 'hexlet-io-courses_files';
+const expectedAssetsNames = [
+  'courses-styles-index.css',
+  'courses-scripts-index.js',
+  'courses-images-work7.jpeg',
+];
 
-let pageContent;
-let output;
+let initialContent;
+let expectedContent;
+let scriptFile;
+let styleFile;
+let outputDir;
 
 beforeAll(async () => {
-  const html = await fs.readFile(getFixturePath('data.html'), 'utf-8');
-  pageContent = html.trim();
+  initialContent = await fs.readFile(getFixturePath('index.html'), 'utf-8');
+  const content = await fs.readFile(getFixturePath('loaded.html'), 'utf-8');
+  expectedContent = cheerio.load(content).html();
+  scriptFile = await fs.readFile(getFixturePath('scripts/index.js'), 'utf-8');
+  styleFile = await fs.readFile(getFixturePath('styles/index.css'), 'utf-8');
 });
 
 beforeEach(async () => {
-  output = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+  outputDir = await fs.mkdtemp(join(os.tmpdir(), 'page-loader-'));
 });
 
 afterEach(() => { nock.restore(); });
 
 test('load and write page', async () => {
-  nock(host).get(pathName).reply(200, pageContent);
+  nock(host).get(pathName).reply(200, initialContent);
+  nock(host).get(`${pathName}/scripts/index.js`)
+    .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
+  nock(host).get(`${pathName}/styles/index.css`)
+    .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
+  const imagePath = getFixturePath('images/work7.jpeg');
+  nock(host)
+    .get(`${pathName}/images/work7.jpeg`)
+    .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
+  nock(host)
+    .get(`${pathName}/images/work7.jpeg`)
+    .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
 
-  const msg = await loadPage(`${host}${pathName}`, output);
-
-  const filepath = path.join(output, pageName);
-  const loadedContent = await fs.readFile(filepath, 'utf-8');
-
+  const msg = await loadPage(`${host}${pathName}`, outputDir);
   expect(msg).toBe(`Page was downloaded as '${pageName}'`);
-  expect(loadedContent).toBe(pageContent);
+
+  const actualContent = await fs.readFile(join(outputDir, pageName), 'utf-8');
+  expect(actualContent).toBe(expectedContent);
+
+  const loadedAssets = await fs.readdir(join(outputDir, assetsDir), { withFileTypes: true });
+  const actualAssetsNames = loadedAssets.map(({ name }) => name);
+  expect(actualAssetsNames.sort()).toEqual(expectedAssetsNames.sort());
 });
 
 test('load with error', async () => {
   const msg = await loadPage('invalid/url');
   expect(msg).toMatch(/Error:/);
 
-  const msg2 = await loadPage(`${host}${pathName}`, `${output}/not/exist`);
+  const msg2 = await loadPage(`${host}${pathName}`, `${outputDir}/not/exist`);
   expect(msg2).toMatch(/Error:/);
 });
