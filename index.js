@@ -3,6 +3,21 @@ import { createWriteStream, promises as fs } from 'fs';
 import axios from 'axios';
 import cheerio from 'cheerio';
 import debug from 'debug';
+import axiosDebugLog from 'axios-debug-log';
+
+axiosDebugLog({
+  request(logAxios, config) {
+    logAxios(`Request to ${config.url}`);
+  },
+  response(logAxios, response) {
+    logAxios(`Response with '${
+      response.headers['content-type']
+    }' 'content-type' header from ${response.config.url}`);
+  },
+  error(logAxios, error) {
+    logAxios(`${error}`);
+  },
+});
 
 const isLocalSource = (source) => {
   const isFile = source && extname(source).slice(1);
@@ -49,7 +64,6 @@ const handleContent = (content, url) => {
   return { page, assets };
 };
 
-
 const contentAction = [
   {
     check: (contentType) => /javascript/.test(contentType) || /^text\/css/.test(contentType),
@@ -67,9 +81,7 @@ const getSourceLoader = (absOutput) => ({ pathForLoad, pathForLocalSave }) => {
   return axios.get(pathForLoad)
     .then((response) => {
       const contentType = response.headers['content-type'];
-      logAsset(`Asset ${pathForLoad} has 'content-type' header: '${contentType}'`);
-
-      const noop = { process: () => null };
+      const noop = { process: () => Promise.resolve() };
       const { process } = contentAction.find(({ check }) => check(contentType)) || noop;
       const pathForWrite = join(absOutput, pathForLocalSave);
 
