@@ -3,6 +3,7 @@ import os from 'os';
 import { createReadStream, promises as fs } from 'fs';
 import nock from 'nock';
 import cheerio from 'cheerio';
+import debug from 'debug';
 import loadPage from '../index.js';
 
 const getFixturePath = (filename) => join('__fixtures__', filename);
@@ -38,17 +39,14 @@ beforeEach(async () => {
 afterEach(() => { nock.restore(); });
 
 test('load and write page', async () => {
-  nock(host).get(pathName).reply(200, initialContent);
-  nock(host).get(`${pathName}/scripts/index.js`)
+  const logNock = debug('nock');
+  nock(host).log(logNock).get(pathName).reply(200, initialContent);
+  nock(host).log(logNock).get(`${pathName}/scripts/index.js`)
     .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
-  nock(host).get(`${pathName}/styles/index.css`)
+  nock(host).log(logNock).get(`${pathName}/styles/index.css`)
     .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
   const imagePath = getFixturePath('images/work7.jpeg');
-  nock(host)
-    .get(`${pathName}/images/work7.jpeg`)
-    .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
-  nock(host)
-    .get(`${pathName}/images/work7.jpeg`)
+  nock(host).log(logNock).get(`${pathName}/images/work7.jpeg`).twice()
     .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
 
   const msg = await loadPage(`${host}${pathName}`, outputDir);

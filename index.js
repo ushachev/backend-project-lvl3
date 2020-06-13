@@ -92,19 +92,16 @@ const loadPage = (url, output = '') => {
     .then(({ page, assets }) => {
       pageName = page.name;
       const pagePath = join(absOutput, pageName);
-      const pageBodyPromise = fs.writeFile(pagePath, page.body)
-        .then(() => logLoad(`Page body is written to ${pagePath}`));
-      const pagePromises = [pageBodyPromise];
+      const pagePromises = [fs.writeFile(pagePath, page.body)
+        .then(() => logLoad(`Page body is written to ${pagePath}`))];
 
       const { dir, sources } = assets;
       if (sources.length) {
         const assetsPath = join(absOutput, dir);
-        const assetsPromise = fs.mkdir(assetsPath, { recursive: true })
+        pagePromises.push(fs.mkdir(assetsPath, { recursive: true })
           .then(() => logLoad(`Page assets directory ${assetsPath} created`))
           .then(() => sources.map(getSourceLoader(absOutput)))
-          .then((promises) => Promise.all(promises))
-          .then(() => logLoad('Loading page assets done'));
-        pagePromises.push(assetsPromise);
+          .then((promises) => Promise.all(promises)));
       }
 
       return Promise.all(pagePromises).then(() => logLoad(`Loading ${url} done`));
