@@ -10,5 +10,8 @@ program
   .description('Downloads a web page for local viewing.')
   .option('-o, --output [dir]', 'output directory (default: current directory)')
   .arguments('<url>')
-  .action((url) => loadPage(url, program.output).then(console.log))
+  .action((url) => loadPage(url, program.output)
+    .then(console.log)
+    .catch((e) => console.error(e.message))
+    .then(() => process.exit(1)))
   .parse(process.argv);

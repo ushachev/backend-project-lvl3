@@ -4,6 +4,7 @@ import axios from 'axios';
 import cheerio from 'cheerio';
 import debug from 'debug';
 import axiosDebugLog from 'axios-debug-log';
+import errorHandler from './src/errorHandler.js';
 
 axiosDebugLog({
   request(logAxios, config) {
@@ -15,7 +16,7 @@ axiosDebugLog({
     }' 'content-type' header from ${response.config.url}`);
   },
   error(logAxios, error) {
-    logAxios(`${error}`);
+    logAxios(`${error} when addressing '${error.config.url}'`);
   },
 });
 
@@ -27,8 +28,8 @@ const isLocalSource = (source) => {
 
 const tagsToHandle = [
   { tagName: 'script', attr: 'src' },
-  { tagName: 'img', attr: 'src' },
   { tagName: 'link', attr: 'href' },
+  { tagName: 'img', attr: 'src' },
 ];
 
 const handleContent = (content, url) => {
@@ -71,23 +72,25 @@ const contentAction = [
   },
   {
     check: (contentType) => /^image/.test(contentType),
-    process: ({ config }, pathForWrite) => axios.get(config.url, { responseType: 'stream' })
+    process: ({ config }, pathForWrite) => axios
+      .get(config.url, { responseType: 'stream' })
       .then(({ data }) => data.pipe(createWriteStream(pathForWrite))),
   },
 ];
 
 const getSourceLoader = (absOutput) => ({ pathForLoad, pathForLocalSave }) => {
   const logAsset = debug('page-loader: assets');
+  const pathForWrite = join(absOutput, pathForLocalSave);
+
   return axios.get(pathForLoad)
     .then((response) => {
       const contentType = response.headers['content-type'];
       const noop = { process: () => Promise.resolve() };
       const { process } = contentAction.find(({ check }) => check(contentType)) || noop;
-      const pathForWrite = join(absOutput, pathForLocalSave);
 
-      return process(response, pathForWrite)
-        .then(() => logAsset(`${pathForWrite} is written`));
-    });
+      return process(response, pathForWrite);
+    })
+    .then(() => logAsset(`${pathForWrite} is written`));
 };
 
 const loadPage = (url, output = '') => {
@@ -113,13 +116,13 @@ const loadPage = (url, output = '') => {
         pagePromises.push(fs.mkdir(assetsPath, { recursive: true })
           .then(() => logLoad(`Page assets directory ${assetsPath} created`))
           .then(() => sources.map(getSourceLoader(absOutput)))
-          .then((promises) => Promise.all(promises)));
+          .then((promises) => Promise.allSettled(promises)));
       }
 
       return Promise.all(pagePromises).then(() => logLoad(`Loading ${url} done`));
     })
     .then(() => `Page was downloaded as '${pageName}'`)
-    .catch((e) => `Error: ${e}`);
+    .catch((err) => errorHandler(err));
 };
 
 export default loadPage;

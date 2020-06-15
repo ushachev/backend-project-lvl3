@@ -8,6 +8,7 @@ import loadPage from '../index.js';
 
 const getFixturePath = (filename) => join('__fixtures__', filename);
 
+const logNock = debug('nock');
 const host = 'https://hexlet.io';
 const pathName = '/courses';
 const pageName = 'hexlet-io-courses.html';
@@ -36,10 +37,7 @@ beforeEach(async () => {
   outputDir = await fs.mkdtemp(join(os.tmpdir(), 'page-loader-'));
 });
 
-afterEach(() => { nock.restore(); });
-
 test('load and write page', async () => {
-  const logNock = debug('nock');
   nock(host).log(logNock).get(pathName).reply(200, initialContent);
   nock(host).log(logNock).get(`${pathName}/scripts/index.js`)
     .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
@@ -60,10 +58,13 @@ test('load and write page', async () => {
   expect(actualAssetsNames.sort()).toEqual(expectedAssetsNames.sort());
 });
 
-test('load with error', async () => {
-  const msg = await loadPage('invalid/url');
-  expect(msg).toMatch(/Error:/);
+test('must throw an error', async () => {
+  nock(host).log(logNock).get(pathName).reply(404);
 
-  const msg2 = await loadPage(`${host}${pathName}`, `${outputDir}/not/exist`);
-  expect(msg2).toMatch(/Error:/);
+  await expect(loadPage(`${host}${pathName}`, outputDir))
+    .rejects.toThrow('page-loader: HTTP Error 404.');
+  await expect(loadPage('https;//www.google.com'))
+    .rejects.toThrow('page-loader: HTTP Error 400.');
+  await expect(loadPage('https://www.google.com', `${outputDir}/not/exist`))
+    .rejects.toThrow('ENOENT:');
 });
