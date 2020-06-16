@@ -63,8 +63,8 @@ test('must throw an error', async () => {
 
   await expect(loadPage(`${host}${pathName}`, outputDir))
     .rejects.toThrow('page-loader: HTTP Error 404.');
-  await expect(loadPage('https;//www.google.com'))
-    .rejects.toThrow('page-loader: HTTP Error 400.');
-  await expect(loadPage('https://www.google.com', `${outputDir}/not/exist`))
+  await expect(loadPage('https:/hexlet.io'))
+    .rejects.toThrow('is invalid.');
+  await expect(loadPage('https://hexlet.io', `${outputDir}/not/exist`))
     .rejects.toThrow('ENOENT:');
 });
