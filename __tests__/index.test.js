@@ -3,12 +3,10 @@ import os from 'os';
 import { createReadStream, promises as fs } from 'fs';
 import nock from 'nock';
 import cheerio from 'cheerio';
-import debug from 'debug';
 import loadPage from '../index.js';
 
 const getFixturePath = (filename) => join('__fixtures__', filename);
 
-const logNock = debug('nock');
 const host = 'https://hexlet.io';
 const pathName = '/courses';
 const pageName = 'hexlet-io-courses.html';
@@ -38,13 +36,13 @@ beforeEach(async () => {
 });
 
 test('load and write page', async () => {
-  nock(host).log(logNock).get(pathName).reply(200, initialContent);
-  nock(host).log(logNock).get(`${pathName}/scripts/index.js`)
+  nock(host).get(pathName).reply(200, initialContent);
+  nock(host).get(`${pathName}/scripts/index.js`)
     .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
-  nock(host).log(logNock).get(`${pathName}/styles/index.css`)
+  nock(host).get(`${pathName}/styles/index.css`)
     .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
   const imagePath = getFixturePath('images/work7.jpeg');
-  nock(host).log(logNock).get(`${pathName}/images/work7.jpeg`).twice()
+  nock(host).get(`${pathName}/images/work7.jpeg`).twice()
     .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
 
   const msg = await loadPage(`${host}${pathName}`, outputDir);
@@ -59,7 +57,7 @@ test('load and write page', async () => {
 });
 
 test('must throw an error', async () => {
-  nock(host).log(logNock).get(pathName).reply(404);
+  nock(host).get(pathName).reply(404);
 
   await expect(loadPage(`${host}${pathName}`, outputDir))
     .rejects.toThrow('page-loader: HTTP Error 404.');
