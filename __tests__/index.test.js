@@ -3,7 +3,7 @@ import os from 'os';
 import { createReadStream, promises as fs } from 'fs';
 import nock from 'nock';
 import cheerio from 'cheerio';
-import loadPage from '../index.js';
+import Page from '../src/Page.js';
 
 const getFixturePath = (filename) => join('__fixtures__', filename);
 
@@ -45,8 +45,8 @@ test('load and write page', async () => {
   nock(host).get(`${pathName}/images/work7.jpeg`).twice()
     .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
 
-  const msg = await loadPage(`${host}${pathName}`, outputDir);
-  expect(msg).toBe(`Page was downloaded as '${pageName}'`);
+  await new Page(`${host}${pathName}`, outputDir).load();
+  // await page.load();
 
   const actualContent = await fs.readFile(join(outputDir, pageName), 'utf-8');
   expect(actualContent).toBe(expectedContent);
@@ -59,10 +59,10 @@ test('load and write page', async () => {
 test('must throw an error', async () => {
   nock(host).get(pathName).reply(404);
 
-  await expect(loadPage(`${host}${pathName}`, outputDir))
+  await expect(new Page(`${host}${pathName}`, outputDir).load())
     .rejects.toThrow('page-loader: HTTP Error 404.');
-  await expect(loadPage('https:/hexlet.io'))
+  await expect(new Page('https:/hexlet.io').load())
     .rejects.toThrow('is invalid.');
-  await expect(loadPage('https://hexlet.io', `${outputDir}/not/exist`))
+  await expect(new Page('https://hexlet.io', `${outputDir}/not/exist`).load())
     .rejects.toThrow('ENOENT:');
 });

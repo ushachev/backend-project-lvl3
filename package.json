@@ -20,6 +20,7 @@
     "cli-utility",
     "page-downloader"
   ],
+  "main": "./src/Page.js",
   "author": "Vitaliy Ushachev",
   "license": "ISC",
   "bugs": {

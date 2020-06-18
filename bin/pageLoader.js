@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import commander from 'commander';
-import loadPage from '../index.js';
+import Page from '../src/Page.js';
 
 const { program } = commander;
 
@@ -10,8 +10,11 @@ program
   .description('Downloads a web page for local viewing.')
   .option('-o, --output [dir]', 'output directory (default: current directory)')
   .arguments('<url>')
-  .action((url) => loadPage(url, program.output)
-    .then(console.log)
-    .catch((e) => console.error(e.message))
-    .then(() => process.exit(1)))
+  .action((url) => {
+    const page = new Page(url, program.output);
+    page.load()
+      .then(() => console.log(`Page was downloaded as '${page.name}'`))
+      .catch((err) => console.error(err.message))
+      .then(() => process.exit(1));
+  })
   .parse(process.argv);
