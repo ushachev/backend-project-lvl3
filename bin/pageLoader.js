@@ -40,13 +40,11 @@ program
     tasks.run()
       .then(({ result }) => console.log(result))
       .catch((err) => {
-        if (err.context.result) {
-          console.log(`${err.context.result} with some failed asset downloads.`);
-          return 0;
+        if (!err.context.result) {
+          console.error(`page-loader: ${err.message}`);
+          process.exit(1);
         }
-        console.error(`page-loader: ${err.message}`);
-        return 1;
-      })
-      .then((exitCode) => process.exit(exitCode));
+        console.log(`${err.context.result} with some failed asset downloads.`);
+      });
   })
   .parse(process.argv);
