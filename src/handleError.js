@@ -11,7 +11,7 @@ export default (err) => {
     const getDefaultMessage = (url) => `${err.message} while hanling '${url}'`;
     const getErrorMessage = codeMapping[err.response.status] || getDefaultMessage;
 
-    throw new Error(`page-loader: ${getErrorMessage(err.response.config.url)}`);
+    throw new Error(getErrorMessage(err.response.config.url));
   }
   throw err;
 };

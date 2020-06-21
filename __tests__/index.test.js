@@ -46,7 +46,6 @@ test('load and write page', async () => {
     .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
 
   await new Page(`${host}${pathName}`, outputDir).load();
-  // await page.load();
 
   const actualContent = await fs.readFile(join(outputDir, pageName), 'utf-8');
   expect(actualContent).toBe(expectedContent);
@@ -60,7 +59,7 @@ test('must throw an error', async () => {
   nock(host).get(pathName).reply(404);
 
   await expect(new Page(`${host}${pathName}`, outputDir).load())
-    .rejects.toThrow('page-loader: HTTP Error 404.');
+    .rejects.toThrow('HTTP Error 404.');
   await expect(new Page('https:/hexlet.io').load())
     .rejects.toThrow('is invalid.');
   await expect(new Page('https://hexlet.io', `${outputDir}/not/exist`).load())

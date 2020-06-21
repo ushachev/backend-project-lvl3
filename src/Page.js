@@ -49,7 +49,7 @@ export default class Page {
     return fs.access(this.output)
       .then(() => {
         if (!urlRegex({ exact: true }).test(this.url)) {
-          throw new Error(`page-loader: URL '${this.url}' is invalid.`);
+          throw new Error(`URL '${this.url}' is invalid.`);
         }
       })
       .then(() => axios.get(this.url))
@@ -61,6 +61,7 @@ export default class Page {
     this.name = page.name;
     this.body = page.body;
     this.assets = assets;
+    return Promise.resolve();
   }
 
   writeBody() {
