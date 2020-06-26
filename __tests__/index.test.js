@@ -3,7 +3,7 @@ import os from 'os';
 import { createReadStream, promises as fs } from 'fs';
 import nock from 'nock';
 import cheerio from 'cheerio';
-import Page from '../src/Page.js';
+import loadPage from '../index.js';
 
 const getFixturePath = (filename) => join('__fixtures__', filename);
 
@@ -45,7 +45,8 @@ test('load and write page', async () => {
   nock(host).get(`${pathName}/images/work7.jpeg`).twice()
     .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
 
-  await new Page(`${host}${pathName}`, outputDir).load();
+  const { pageName: actualPageName } = await loadPage(`${host}${pathName}`, outputDir);
+  expect(actualPageName).toBe(pageName);
 
   const actualContent = await fs.readFile(join(outputDir, pageName), 'utf-8');
   expect(actualContent).toBe(expectedContent);
@@ -58,10 +59,32 @@ test('load and write page', async () => {
 test('must throw an error', async () => {
   nock(host).get(pathName).reply(404);
 
-  await expect(new Page(`${host}${pathName}`, outputDir).load())
+  await expect(loadPage(`${host}${pathName}`, outputDir))
     .rejects.toThrow('HTTP Error 404.');
-  await expect(new Page('https:/hexlet.io').load())
+  await expect(loadPage('https:/hexlet.io'))
     .rejects.toThrow('is invalid.');
-  await expect(new Page('https://hexlet.io', `${outputDir}/not/exist`).load())
+  await expect(loadPage('https://hexlet.io', `${outputDir}/not/exist`))
     .rejects.toThrow('ENOENT:');
+});
+
+test('load and write page with failed asset', async () => {
+  nock(host).get(pathName).reply(200, initialContent);
+  nock(host).get(`${pathName}/scripts/index.js`)
+    .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
+  nock(host).get(`${pathName}/styles/index.css`)
+    .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
+  nock(host).get(`${pathName}/images/work7.jpeg`).reply(404);
+
+  const expectedFailedAssets = [
+    {
+      message: `HTTP Error 404. The requested URL '${host}${pathName}/images/work7.jpeg' not found.`,
+      source: {
+        pathForLoad: `${host}${pathName}/images/work7.jpeg`,
+        pathForLocalSave: `${assetsDir}/courses-images-work7.jpeg`,
+      },
+    },
+  ];
+
+  const { failedAssets: actualFailedAssets } = await loadPage(`${host}${pathName}`, outputDir);
+  expect(actualFailedAssets).toEqual(expectedFailedAssets);
 });
