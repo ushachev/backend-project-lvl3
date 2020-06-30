@@ -8,8 +8,8 @@ import Listr from 'listr';
 import handleContent from './src/handleContent.js';
 import handleError from './src/handleError.js';
 
-const logLoad = debug('page-loader: load');
-const logAsset = debug('page-loader: assets');
+const logLoad = debug('page-loader:load');
+const logAsset = debug('page-loader:assets');
 
 axiosDebugLog({
   request(logAxios, config) {
