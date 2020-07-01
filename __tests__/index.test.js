@@ -12,7 +12,7 @@ const pathName = '/courses';
 const pageName = 'hexlet-io-courses.html';
 const assetsDir = 'hexlet-io-courses_files';
 const expectedAssetsNames = [
-  'courses-styles-index.css',
+  'assets-index.css',
   'courses-scripts-index.js',
   'courses-images-work7.jpeg',
 ];
@@ -39,7 +39,7 @@ test('load and write page', async () => {
   nock(host).get(pathName).reply(200, initialContent);
   nock(host).get(`${pathName}/scripts/index.js`)
     .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
-  nock(host).get(`${pathName}/styles/index.css`)
+  nock('https://cdn.hexlet.io').get('/assets/index.css')
     .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
   const imagePath = getFixturePath('images/work7.jpeg');
   nock(host).get(`${pathName}/images/work7.jpeg`).twice()
@@ -71,7 +71,7 @@ test('load and write page with failed asset', async () => {
   nock(host).get(pathName).reply(200, initialContent);
   nock(host).get(`${pathName}/scripts/index.js`)
     .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
-  nock(host).get(`${pathName}/styles/index.css`)
+  nock('https://cdn.hexlet.io').get('/assets/index.css')
     .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
   nock(host).get(`${pathName}/images/work7.jpeg`).reply(404);
 
