@@ -25,29 +25,10 @@ axiosDebugLog({
   },
 });
 
-const contentActions = [
-  {
-    check: (contentType) => /javascript/.test(contentType) || /^text\/css/.test(contentType),
-    process: ({ data }, pathForWrite) => fs.writeFile(pathForWrite, data),
-  },
-  {
-    check: (contentType) => /^image/.test(contentType),
-    process: ({ config }, pathForWrite) => axios
-      .get(config.url, { responseType: 'stream' })
-      .then(({ data }) => data.pipe(createWriteStream(pathForWrite))),
-  },
-];
-
 const loadAsset = ({ pathForLoad, pathForLocalSave }, output) => {
   const pathForWrite = join(output, pathForLocalSave);
-  return axios.get(pathForLoad)
-    .then((response) => {
-      const contentType = response.headers['content-type'];
-      const noop = { process: () => Promise.resolve() };
-      const { process } = contentActions.find(({ check }) => check(contentType)) || noop;
-
-      return process(response, pathForWrite);
-    })
+  return axios.get(pathForLoad, { responseType: 'stream' })
+    .then(({ data }) => data.pipe(createWriteStream(pathForWrite)))
     .then(() => logAsset(`${pathForWrite} is written`));
 };
 
@@ -79,18 +60,18 @@ const composeTasks = (url, output, options) => new Listr([
 ], options);
 
 export default (url, output = '', options = {}) => {
-  const absOutput = resolve(process.cwd(), output);
+  const outputPath = resolve(process.cwd(), output);
   const { collapse, renderer } = { collapse: false, renderer: 'silent', ...options };
 
-  logLoad(`Start loading ${url} to ${absOutput}`);
+  logLoad(`Start loading ${url} to ${outputPath}`);
 
-  return fs.access(absOutput)
+  return fs.access(outputPath)
     .then(() => {
       if (!urlRegex({ exact: true }).test(url)) {
         throw new Error(`URL '${url}' is invalid.`);
       }
     })
-    .then(() => composeTasks(url, absOutput, { collapse, renderer }))
+    .then(() => composeTasks(url, outputPath, { collapse, renderer }))
     .then((tasks) => tasks.run())
     .then(({ pageName }) => ({ pageName, failedAssets: [] }))
     .catch((err) => {

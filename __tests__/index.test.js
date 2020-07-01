@@ -37,13 +37,10 @@ beforeEach(async () => {
 
 test('load and write page', async () => {
   nock(host).get(pathName).reply(200, initialContent);
-  nock(host).get(`${pathName}/scripts/index.js`)
-    .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
-  nock('https://cdn.hexlet.io').get('/assets/index.css')
-    .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
-  const imagePath = getFixturePath('images/work7.jpeg');
-  nock(host).get(`${pathName}/images/work7.jpeg`).twice()
-    .reply(200, () => createReadStream(imagePath), { 'content-type': 'image/jpeg' });
+  nock(host).get(`${pathName}/scripts/index.js`).reply(200, scriptFile);
+  nock('https://cdn.hexlet.io').get('/assets/index.css').reply(200, styleFile);
+  nock(host).get(`${pathName}/images/work7.jpeg`)
+    .reply(200, () => createReadStream(getFixturePath('images/work7.jpeg')));
 
   const { pageName: actualPageName } = await loadPage(`${host}${pathName}`, outputDir);
   expect(actualPageName).toBe(pageName);
@@ -69,10 +66,8 @@ test('must throw an error', async () => {
 
 test('load and write page with failed asset', async () => {
   nock(host).get(pathName).reply(200, initialContent);
-  nock(host).get(`${pathName}/scripts/index.js`)
-    .reply(200, scriptFile, { 'content-type': 'application/javascript; charset=utf-8' });
-  nock('https://cdn.hexlet.io').get('/assets/index.css')
-    .reply(200, styleFile, { 'content-type': 'text/css; charset=utf-8' });
+  nock(host).get(`${pathName}/scripts/index.js`).reply(200, scriptFile);
+  nock('https://cdn.hexlet.io').get('/assets/index.css').reply(200, styleFile);
   nock(host).get(`${pathName}/images/work7.jpeg`).reply(404);
 
   const expectedFailedAssets = [
