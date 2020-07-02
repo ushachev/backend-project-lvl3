@@ -4,7 +4,6 @@ import axios from 'axios';
 import debug from 'debug';
 import axiosDebugLog from 'axios-debug-log';
 import urlRegex from 'url-regex';
-import Listr from 'listr';
 import handleContent from './src/handleContent.js';
 import handleError from './src/handleError.js';
 
@@ -25,61 +24,48 @@ axiosDebugLog({
   },
 });
 
-const loadAsset = ({ pathForLoad, pathForLocalSave }, output) => {
-  const pathForWrite = join(output, pathForLocalSave);
-  return axios.get(pathForLoad, { responseType: 'stream' })
-    .then(({ data }) => data.pipe(createWriteStream(pathForWrite)))
-    .then(() => logAsset(`${pathForWrite} is written`));
+const checkUrl = (url) => {
+  if (!urlRegex({ exact: true }).test(url)) {
+    throw new Error(`URL '${url}' is invalid.`);
+  }
 };
 
-const composeTasks = (url, output, options) => new Listr([
-  {
-    title: 'Loading page content',
-    task: (ctx) => axios.get(url)
-      .then(({ data }) => handleContent(data, url))
-      .then(({ page, assets }) => {
-        ctx.areThereSources = assets.sources.length !== 0;
-        ctx.pageName = page.name;
-        ctx.assets = assets;
+const loadAssets = (assets, output) => {
+  const assetsPath = join(output, assets.dir);
+  return fs.mkdir(assetsPath, { recursive: true })
+    .then(() => logLoad(`Page assets directory ${assetsPath} created`))
+    .then(() => assets.sources.map((source) => {
+      const { pathForLoad, pathForLocalSave } = source;
+      const pathForWrite = join(output, pathForLocalSave);
 
-        return fs.writeFile(join(output, page.name), page.body);
-      })
-      .then(() => logLoad(`Page body is written to ${join(output, ctx.pageName)}`))
-      .catch(handleError),
-  },
-  {
-    title: 'Loading page assets',
-    enabled: (ctx) => ctx.areThereSources,
-    task: (ctx) => fs.mkdir(join(output, ctx.assets.dir), { recursive: true })
-      .then(() => logLoad(`Page assets directory ${join(output, ctx.assets.dir)} created`))
-      .then(() => new Listr(ctx.assets.sources.map((source) => ({
-        title: `${source.pathForLoad}`,
-        task: () => loadAsset(source, output).catch((err) => handleError(err, source)),
-      })), { concurrent: true, exitOnError: false })),
-  },
-], options);
+      return axios.get(pathForLoad, { responseType: 'stream' })
+        .then(({ data }) => data.pipe(createWriteStream(pathForWrite)))
+        .then(() => logAsset(`${pathForWrite} is written`))
+        .catch((err) => handleError(err, source));
+    }))
+    .then((promises) => Promise.allSettled(promises))
+    .then((results) => results
+      .filter(({ status }) => status === 'rejected')
+      .map(({ reason }) => ({ message: reason.message, source: reason.source })));
+};
 
-export default (url, output = '', options = {}) => {
+export default (url, output = '') => {
   const outputPath = resolve(process.cwd(), output);
-  const { collapse, renderer } = { collapse: false, renderer: 'silent', ...options };
+  let pageData;
 
   logLoad(`Start loading ${url} to ${outputPath}`);
 
   return fs.access(outputPath)
-    .then(() => {
-      if (!urlRegex({ exact: true }).test(url)) {
-        throw new Error(`URL '${url}' is invalid.`);
-      }
+    .then(() => checkUrl(url))
+    .then(() => axios.get(url))
+    .then(({ data }) => handleContent(data, url))
+    .then((content) => { pageData = content; })
+    .then(() => fs.writeFile(join(outputPath, pageData.page.name), pageData.page.body))
+    .then(() => logLoad(`Page body is written to ${join(outputPath, pageData.page.name)}`))
+    .then(() => (pageData.assets.sources.length ? loadAssets(pageData.assets, outputPath) : []))
+    .then((failedAssets) => {
+      logLoad(`Loading ${url} done`);
+      return { pageName: pageData.page.name, failedAssets };
     })
-    .then(() => composeTasks(url, outputPath, { collapse, renderer }))
-    .then((tasks) => tasks.run())
-    .then(({ pageName }) => ({ pageName, failedAssets: [] }))
-    .catch((err) => {
-      if (!err.context || !err.context.pageName) {
-        throw err;
-      }
-      const failedAssets = err.errors.map(({ message, source }) => ({ message, source }));
-
-      return { pageName: err.context.pageName, failedAssets };
-    });
+    .catch(handleError);
 };
