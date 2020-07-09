@@ -12,9 +12,9 @@ const pathName = '/courses';
 const pageName = 'hexlet-io-courses.html';
 const assetsDir = 'hexlet-io-courses_files';
 const expectedAssetsNames = [
-  'assets-index.css',
-  'courses-scripts-index.js',
-  'courses-images-work7.jpeg',
+  'styles-index.css',
+  'scripts-index.js',
+  'images-work7.jpeg',
 ];
 
 let initialContent;
@@ -38,7 +38,7 @@ beforeEach(async () => {
 test('load and write page', async () => {
   nock(host).get(pathName).reply(200, initialContent);
   nock(host).get(`${pathName}/scripts/index.js`).reply(200, scriptFile);
-  nock('https://cdn.hexlet.io').get('/assets/index.css').reply(200, styleFile);
+  nock(host).get(`${pathName}/styles/index.css`).reply(200, styleFile);
   nock(host).get(`${pathName}/images/work7.jpeg`)
     .reply(200, () => createReadStream(getFixturePath('images/work7.jpeg')));
 
@@ -59,7 +59,7 @@ test('must throw an error', async () => {
   await expect(loadPage(`${host}${pathName}`, outputDir))
     .rejects.toThrow('HTTP Error 404.');
   await expect(loadPage('https:/hexlet.io'))
-    .rejects.toThrow('is invalid.');
+    .rejects.toThrow();
   await expect(loadPage('https://hexlet.io', `${outputDir}/not/exist`))
     .rejects.toThrow('ENOENT:');
 });
@@ -67,7 +67,7 @@ test('must throw an error', async () => {
 test('load and write page with failed asset', async () => {
   nock(host).get(pathName).reply(200, initialContent);
   nock(host).get(`${pathName}/scripts/index.js`).reply(200, scriptFile);
-  nock('https://cdn.hexlet.io').get('/assets/index.css').reply(200, styleFile);
+  nock(host).get(`${pathName}/styles/index.css`).reply(200, styleFile);
   nock(host).get(`${pathName}/images/work7.jpeg`).reply(404);
 
   const expectedFailedAssets = [
@@ -75,7 +75,7 @@ test('load and write page with failed asset', async () => {
       message: `HTTP Error 404. The requested URL '${host}${pathName}/images/work7.jpeg' not found.`,
       source: {
         pathForLoad: `${host}${pathName}/images/work7.jpeg`,
-        pathForLocalSave: `${assetsDir}/courses-images-work7.jpeg`,
+        pathForLocalSave: `${assetsDir}/images-work7.jpeg`,
       },
     },
   ];

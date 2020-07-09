@@ -9,7 +9,7 @@ const codeMapping = {
 };
 
 const getErrorMessage = (err) => {
-  if (!err.isAxiosError) return err.message;
+  if (!err.isAxiosError || !err.response) return err.message;
 
   const { message, response: { status: code, config: { url: sourceUrl } } } = err;
   return codeMapping[code]
