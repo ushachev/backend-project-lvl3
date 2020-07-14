@@ -10,7 +10,7 @@ program
   .description('Downloads a web page for local viewing.')
   .option('-o, --output [dir]', 'output directory (default: current directory)')
   .arguments('<url>')
-  .action((url) => loadPage(url, program.output, { renderer: 'default' })
+  .action((url) => loadPage(url, program.output, 'default')
     .then(({ pageName, failedAssets }) => {
       const message = failedAssets.length === 0
         ? `Page was downloaded as '${pageName}'.`
