@@ -11,10 +11,10 @@ const codeMapping = {
 const getErrorMessage = (err) => {
   if (!err.isAxiosError || !err.response) return err.message;
 
-  const { message, response: { status: code, config: { url: sourceUrl } } } = err;
+  const { message, response: { status: code, config: { url } } } = err;
   return codeMapping[code]
-    ? codeMapping[code](sourceUrl)
-    : `${message} while handling '${sourceUrl}'`;
+    ? codeMapping[code](url)
+    : `${message} while handling '${url}'`;
 };
 
 export default (err, source = null) => {
