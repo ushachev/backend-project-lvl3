@@ -37,7 +37,6 @@ const mapSourceToTask = (source, output) => {
 
 export default (url, output = '', renderer = 'silent') => {
   const outputPath = resolve(process.cwd(), output);
-  const listrOptions = { concurrent: true, exitOnError: false, renderer };
 
   logLoad(`Start loading ${url} to ${outputPath}`);
 
@@ -45,17 +44,24 @@ export default (url, output = '', renderer = 'silent') => {
 
   return fs.access(outputPath)
     .then(() => axios.get(url))
-    .then(({ data }) => getPageData(data, url))
-    .then(({ page, assets }) => fs.writeFile(join(outputPath, page.name), page.body)
-      .then(() => { pageName = page.name; })
-      .then(() => logLoad(`Page body is written to ${join(outputPath, pageName)}`))
-      .then(() => assets))
-    .then(({ dir, sources }) => fs.mkdir(join(outputPath, dir), { recursive: true })
-      .then(() => logLoad(`Page assets directory ${join(outputPath, dir)} created`))
-      .then(() => sources.map((source) => mapSourceToTask(source, outputPath))))
-    .then((sourceLoadingTasks) => new Listr(sourceLoadingTasks, listrOptions).run())
-    .then(() => logLoad(`Loading ${url} done`))
-    .then(() => ({ pageName, failedAssets: [] }))
+    .then(({ data }) => {
+      const { name, body, assets: { dir, sources } } = getPageData(data, url);
+      pageName = name;
+
+      const writeBodyPromise = fs.writeFile(join(outputPath, name), body)
+        .then(() => logLoad(`Page body is written to ${join(outputPath, name)}`));
+      const loadAssetsPromise = fs.mkdir(join(outputPath, dir), { recursive: true })
+        .then(() => logLoad(`Page assets directory ${join(outputPath, dir)} created`))
+        .then(() => {
+          const tasks = sources.map((source) => mapSourceToTask(source, outputPath));
+          return new Listr(tasks, { concurrent: true, exitOnError: false, renderer }).run();
+        });
+
+      return Promise.all([writeBodyPromise, loadAssetsPromise]);
+    }).then(() => {
+      logLoad(`Loading ${url} done`);
+      return { pageName, failedAssets: [] };
+    })
     .catch((e) => {
       if (!e.errors) handleError(e);
       return {

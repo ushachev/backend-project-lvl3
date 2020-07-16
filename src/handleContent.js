@@ -36,8 +36,10 @@ export default (content, url) => {
   const assetSources = tagsToHandle.flatMap(({ tagName, attr }) => $(tagName)
     .map((i, el) => mapElementToSource(el, tagName, attr))
     .get());
-  const page = { name: `${pageNameBase}.html`, body: $.html() };
-  const assets = { dir: assetsDir, sources: assetSources };
 
-  return { page, assets };
+  return {
+    name: `${pageNameBase}.html`,
+    body: $.html(),
+    assets: { dir: assetsDir, sources: assetSources },
+  };
 };
