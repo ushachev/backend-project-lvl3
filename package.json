@@ -1,12 +1,17 @@
 {
   "name": "page-loader",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "cli utility for downloading Web pages",
   "engines": {
     "node": ">=14"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testRunner": "jest-circus/runner"
+  },
   "scripts": {
-    "test": "npx -n --experimental-vm-modules jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "bin": {
     "page-loader": "bin/pageLoader.js"
@@ -27,24 +32,22 @@
     "url": "https://github.com/ushachev/backend-project-lvl3/issues"
   },
   "type": "module",
-  "jest": {
-    "testEnvironment": "node"
-  },
   "homepage": "https://github.com/ushachev/backend-project-lvl3#readme",
   "devDependencies": {
-    "eslint": "^7.1.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-jest": "^23.13.2",
-    "jest": "^26.0.1",
-    "nock": "^12.0.3"
+    "eslint": "^7.25.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^26.6.3",
+    "jest-circus": "^26.6.3",
+    "nock": "^13.0.11"
   },
   "dependencies": {
-    "axios": "^0.19.2",
-    "axios-debug-log": "^0.7.0",
-    "cheerio": "^1.0.0-rc.3",
-    "commander": "^5.1.0",
-    "debug": "^4.1.1",
+    "axios": "^0.21.1",
+    "axios-debug-log": "^0.8.2",
+    "cheerio": "^1.0.0-rc.6",
+    "commander": "^7.2.0",
+    "debug": "^4.3.1",
     "listr": "^0.14.3"
   }
 }
