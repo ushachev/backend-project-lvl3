@@ -38,8 +38,7 @@ export default (content, url) => {
     .get());
 
   return {
-    name: `${pageNameBase}.html`,
-    body: $.html(),
+    page: { name: `${pageNameBase}.html`, body: $.html() },
     assets: { dir: assetsDir, sources: assetSources },
   };
 };

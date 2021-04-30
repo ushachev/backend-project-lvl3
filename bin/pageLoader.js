@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
 import commander from 'commander';
-import loadPage from '../index.js';
+import getPageLoader from '../src/loadPage.js';
+import { loadAssetsInVisualMode } from '../src/loadAssets.js';
 
 const { program } = commander;
+const loadPage = getPageLoader(loadAssetsInVisualMode);
 
 program
-  .version('0.1.1')
+  .version('0.2.0')
   .description('Downloads a web page for local viewing.')
   .option('-o, --output [dir]', 'output directory (default: current directory)')
   .arguments('<url>')
-  .action((url) => loadPage(url, program.output, 'default')
+  .action((url) => loadPage(url, program.output)
     .then(({ pageName, failedAssets }) => {
       const message = failedAssets.length === 0
         ? `Page was downloaded as '${pageName}'.`
